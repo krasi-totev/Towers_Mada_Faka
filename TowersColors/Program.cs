@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
@@ -39,12 +39,41 @@ namespace Towers
         static int[] firstTowerCoordinates = new int[2];
         static int[] secondTowerCoordinates = new int[2];
         static char[,] terrain;
-        private static int d1;
+        static byte menuChoice = 1;
+        static string gameName = "## T - O - W - E - R - S ##";
+
 
         static void Main()
         {
             SetGame();
             while (true)
+            {
+                Game();
+            }
+        }
+
+        static void SetConsole()
+        {
+            Console.BufferHeight = Console.WindowHeight = terrainHeight + 7;
+            Console.BufferWidth = Console.WindowWidth = terrainWidth;
+            Console.Title = "TOWERS2015MadeByHornedDemons";
+            terrain = new char[terrainHeight, terrainWidth];
+        }
+
+        static void SetGame()
+        {
+            SetConsole();
+            Menu();
+        }
+
+        static void Game()
+        {
+            BuildRandomTerrain();
+            PrintFirstTower(10);
+            PrintSecondTower(terrainWidth - 10);
+            RestoreLivePoints();
+
+            while (firstPlayerLivePoints > 0 && secondPlayerLivePoints > 0)
             {
                 DrawTerrain();
                 PrintPanel();
@@ -64,31 +93,151 @@ namespace Towers
                     Shoot();
                 }
             }
-        }
-
-        static void SetConsole()
-        {
-            Console.BufferHeight = Console.WindowHeight = terrainHeight + 7;
-            Console.BufferWidth = Console.WindowWidth = terrainWidth;
-            terrain = new char[terrainHeight, terrainWidth];
-        }
-
-        static void SetGame()
-        {
-            SetConsole();
-            BuildRandomTerrain();
-            PrintFirstTower(10);
-            PrintSecondTower(terrainWidth - 10);
+            CheckForWinner();
         }
 
         static void Menu()
         {
+            byte enterFlag = 0;
+            while (true)
+            {
+                DrawMenu();
+                ConsoleKeyInfo pressedKey = Console.ReadKey();
+                if (pressedKey.Key == ConsoleKey.DownArrow)
+                {
+                    menuChoice += 1;
+                }
+                if (pressedKey.Key == ConsoleKey.UpArrow)
+                {
+                    menuChoice -= 1;
+                }
+                if (pressedKey.Key == ConsoleKey.Enter)
+                {
+                    enterFlag = 1;
+                }
+
+                if (menuChoice > 3)
+                {
+                    menuChoice = 1;
+                }
+                if (menuChoice < 1)
+                {
+                    menuChoice = 3;
+                }
+
+                switch (menuChoice)
+                {
+                    case 1:
+                        if (enterFlag == 1)
+                        {
+                            return;
+                        }
+                        break;
+                    case 2:
+                        if (enterFlag == 1)
+                        {
+                            SetPlayersNames();
+                            enterFlag = 0;
+                            return;
+                        }
+                        break;
+                    case 3:
+                        if (enterFlag == 1)
+                        {
+                            Environment.Exit(0);
+                        }
+                        break;
+                }
+                Console.Clear();
+            }
+        }
+
+        private static void DrawMenu()
+        {
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length - 6, gameName.Length);
+
+            Console.WriteLine(gameName);
+
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length, gameName.Length + 2);
+            if (menuChoice == 1)
+            {
+                ColorLine(">New Game<");
+            }
+            else
+            {
+                Console.WriteLine("New Game");
+            }
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length, gameName.Length + 4);
+            if (menuChoice == 2)
+            {
+                ColorLine(">Settings<");
+            }
+            else
+            {
+                Console.WriteLine("Settings");
+            }
+
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length, gameName.Length + 6);
+            if (menuChoice == 3)
+            {
+                ColorLine(">Quit Game<");
+            }
+            else
+            {
+                Console.WriteLine("Quit Game");
+            }
+
+        }
+
+        static void ColorLine(string value)
+        {
+            // This method writes an entire line to the console with the string.
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(value);
+            // Reset the color.
+            Console.ResetColor();
+        }
+
+        static void RestoreLivePoints()
+        {
+            firstPlayerLivePoints = 100;
+            secondPlayerLivePoints = 100;
+        }
+
+        static void SetPlayersNames()
+        {
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length, gameName.Length + 9);
+
+            Console.Write("Enter Player One Name (default 'PLayer 1'): ");
+
+            string playerOneName = Console.ReadLine().Trim();
+
+            if (playerOneName.Length == 0)
+            {
+                firstPlayerName = "Player 1";
+            }
+            else
+            {
+                firstPlayerName = playerOneName;
+            }
+
+            Console.SetCursorPosition(Console.WindowWidth / 2 - gameName.Length, gameName.Length + 11);
+            Console.Write("Enter Player Two Name (default 'PLayer 2'): ");
+            string playerTwoName = Console.ReadLine().Trim();
+            if (playerTwoName.Length == 0)
+            {
+                secondPlayerName = "Player 2";
+            }
+            else
+            {
+                secondPlayerName = playerTwoName;
+            }
 
         }
 
         static void BuildTerrainFromFile(char[,] terrain, string file)
         {
-
+            //TODO
         }
 
         static void BuildRandomTerrain()
@@ -144,7 +293,6 @@ namespace Towers
             secondTowerCoordinates[1] = x;
             for (int row = terrainHeight - 1; row >= 0; row--)
             {
-
                 if (terrain[row, x] != '#')
                 {
                     secondTowerCoordinates[0] = row;
@@ -161,35 +309,198 @@ namespace Towers
             }
         }
 
+        static void CheckForWinner()
+        {
+            string winner = string.Empty;
+            if (firstPlayerLivePoints <= 0)
+            {
+                winner = String.Format("{0} wins!!!", secondPlayerName);
+                ++secondPlayerScore;
+            }
+            else if (secondPlayerLivePoints <= 0)
+            {
+                winner = String.Format("{0} wins!!!", firstPlayerName);
+                ++firstPlayerScore;
+            }
+
+            PrintOnPosition(60, 30, winner, ConsoleColor.Cyan);
+            Thread.Sleep(3000);
+        }
+
         static void Shoot()
         {
             if (activePlayer == true)
             {
-                BallMovement(firstTowerVelocity, firstTowerAngle, activePlayer);
+                BallMovement(firstTowerVelocity / 2.0, firstTowerAngle, activePlayer);
             }
             else
             {
-                BallMovement(secondTowerVelocity, secondTowerAngle, activePlayer);
+                BallMovement(secondTowerVelocity / 2.0, secondTowerAngle, activePlayer);
             }
             activePlayer = !activePlayer;
         }
 
         static void HitTerrain(int hitX, int hitY)
         {
-
+            //hit only terrain
+            if (hitX < terrain.GetLength(0) - 1 && hitY < terrain.GetLength(1) - 1 && hitY > 0)
+            {
+                StringBuilder hitLine = new StringBuilder("###");
+                //print explosion
+                PrintOnPosition(hitY - 1, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 8, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX + 1; i++)
+                {
+                    for (int j = hitY - 1; j <= hitY + 1; j++)
+                    {
+                        if (terrain[i, j] != '1' && terrain[i, j] != '2')
+                        {
+                            terrain[i, j] = ' ';
+                        }
+                        else //take damage
+                        {
+                            if (terrain[i, j] == '1')
+                            {
+                                firstPlayerLivePoints -= 20;
+                            }
+                            else if (terrain[i, j] == '2')
+                            {
+                                secondPlayerLivePoints -= 20;
+                            }
+                        }
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            //hit terrain left
+            else if (hitX < terrain.GetLength(0) - 1 && hitY == 0)
+            {
+                StringBuilder hitLine = new StringBuilder("##");
+                //print explosion
+                PrintOnPosition(hitY, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY, hitX + 8, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX + 1; i++)
+                {
+                    for (int j = hitY; j <= hitY + 1; j++)
+                    {
+                        terrain[i, j] = ' ';
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            //hit terrain right
+            else if (hitX < terrain.GetLength(0) - 1 && hitY == terrain.GetLength(1) - 1)
+            {
+                StringBuilder hitLine = new StringBuilder("##");
+                //print explosion
+                PrintOnPosition(hitY - 1, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 8, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX + 1; i++)
+                {
+                    for (int j = hitY - 1; j <= hitY; j++)
+                    {
+                        terrain[i, j] = ' ';
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            //hit terrain left and down
+            else if (hitX == terrain.GetLength(0) - 1 && hitY == 0)
+            {
+                StringBuilder hitLine = new StringBuilder("##");
+                //print explosion
+                PrintOnPosition(hitY, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX; i++)
+                {
+                    for (int j = hitY; j <= hitY + 1; j++)
+                    {
+                        terrain[i, j] = ' ';
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            //hit terrain right and down
+            else if (hitX == terrain.GetLength(0) - 1 && hitY == terrain.GetLength(1) - 1)
+            {
+                StringBuilder hitLine = new StringBuilder("##");
+                //print explosion
+                PrintOnPosition(hitY - 1, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX; i++)
+                {
+                    for (int j = hitY - 1; j <= hitY; j++)
+                    {
+                        terrain[i, j] = ' ';
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            //hit terrain down
+            else if (hitX == terrain.GetLength(0) - 1 && hitY < terrain.GetLength(1) - 1 && hitY > 0)
+            {
+                StringBuilder hitLine = new StringBuilder("###");
+                //print explosion
+                PrintOnPosition(hitY - 1, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+                PrintOnPosition(hitY - 1, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+                //change terrain
+                for (int i = hitX - 1; i <= hitX; i++)
+                {
+                    for (int j = hitY - 1; j <= hitY + 1; j++)
+                    {
+                        terrain[i, j] = ' ';
+                    }
+                }
+                Thread.Sleep(1000);
+            }
         }
 
         static void HitTower(int hitX, int hitY)
         {
-
+            StringBuilder hitLine = new StringBuilder("###");
+            //print explosion
+            PrintOnPosition(hitY - 1, hitX + 6, hitLine.ToString(), ConsoleColor.Yellow);
+            PrintOnPosition(hitY - 1, hitX + 7, hitLine.ToString(), ConsoleColor.Yellow);
+            PrintOnPosition(hitY - 1, hitX + 8, hitLine.ToString(), ConsoleColor.Yellow);
+            //take damage
+            for (int i = hitX - 1; i <= hitX + 1; i++)
+            {
+                for (int j = hitY - 1; j <= hitY + 1; j++)
+                {
+                    if (terrain[i, j] == '1')
+                    {
+                        firstPlayerLivePoints -= 20;
+                    }
+                    else if (terrain[i, j] == '2')
+                    {
+                        secondPlayerLivePoints -= 20;
+                    }
+                }
+            }
+            Thread.Sleep(1000);
         }
 
         static void Impact(int hitX, int hitY)
         {
-
+            if (terrain[hitX, hitY] == '#')
+            {
+                HitTerrain(hitX, hitY);
+            }
+            else if (terrain[hitX, hitY] == '1' || terrain[hitX, hitY] == '2')
+            {
+                HitTower(hitX, hitY);
+            }
         }
 
-        static void BallMovement(int velocity, int angle, bool activePlayer)
+        static void BallMovement(double velocity, int angle, bool activePlayer)
         {
             //return hitX and hitY;
             int startingPointX = 0;
@@ -204,8 +515,6 @@ namespace Towers
                 startingPointX = secondTowerCoordinates[1] - 2;
                 startingPointY = secondTowerCoordinates[0] - 5;
             }
-            int oldX = 0;
-            int oldY = 0;
             int x;
             int y;
             int g = 1;
@@ -221,20 +530,20 @@ namespace Towers
                     {
                         return;
                     }
-                    if (terrain[y, x] == '#')
+                    if (terrain[y, x] == '#' || terrain[y, x] == '2')
                     {
-                        HitTerrain(y, x);
+                        Impact(y, x);
                         return;
                     }
+
                     if (terrain[y, x] == '2')
                     {
                         HitTower(y, x);
                         return;
                     }
-                    Thread.Sleep(30);
-                    PrintOnPosition(x, y + 7, '*', ConsoleColor.White);
-                    oldX = x;
-                    oldY = y;
+
+                    Thread.Sleep(20);
+                    PrintOnPosition(x, y + 7, "*", ConsoleColor.White);
                 }
             }
             else if (activePlayer == false)
@@ -247,20 +556,14 @@ namespace Towers
                     {
                         return;
                     }
-                    if (terrain[y, x] == '#')
+                    if (terrain[y, x] == '#' || terrain[y, x] == '1')
                     {
-                        HitTerrain(y, x);
+                        Impact(y, x);
                         return;
                     }
-                    if (terrain[y, x] == '1')
-                    {
-                        HitTower(y, x);
-                        return;
-                    }
-                    Thread.Sleep(30);
-                    PrintOnPosition(x, y + 7, '*', ConsoleColor.White);
-                    oldX = x;
-                    oldY = y;
+
+                    Thread.Sleep(20);
+                    PrintOnPosition(x, y + 7, "*", ConsoleColor.White);
                 }
             }
         }
@@ -297,7 +600,6 @@ namespace Towers
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(terrainBuilder.ToString());
 
-
             //Draw Towers
             Console.CursorVisible = false;
             for (int row = 0; row < terrainHeight; row++)
@@ -307,32 +609,30 @@ namespace Towers
                     if (terrain[row, col] == '1')
                     {
                         Console.BackgroundColor = ConsoleColor.Red;
-                        PrintOnPosition(col, row + 7, terrain[row, col], ConsoleColor.Red);
+                        PrintOnPosition(col, row + 7, terrain[row, col].ToString(), ConsoleColor.Red);
                     }
                     else if (terrain[row, col] == '2')
                     {
                         Console.BackgroundColor = ConsoleColor.Blue;
-                        PrintOnPosition(col, row + 7, terrain[row, col], ConsoleColor.Blue);
+                        PrintOnPosition(col, row + 7, terrain[row, col].ToString(), ConsoleColor.Blue);
                     }
                 }
             }
         }
 
-        static void PrintOnPosition(int x, int y, char c, ConsoleColor color = ConsoleColor.White)
+        static void PrintOnPosition(int x, int y, string c, ConsoleColor color = ConsoleColor.White)
         {
-
             Console.ForegroundColor = color;
             Console.SetCursorPosition(x, y);
             Console.Write(c);
             Console.BackgroundColor = ConsoleColor.Black;
-
         }
 
         static void ModifyAngle(ConsoleKeyInfo key)
         {
             const int sencitivity = 5;
             const int maxAngle = 90;
-            const int minAngle = -45;
+            const int minAngle = 0;
 
             if (key.Key == firstAngleUpKey && activePlayer == true && firstTowerAngle < maxAngle)
             {
@@ -355,8 +655,8 @@ namespace Towers
         static void ModifyVelocity(ConsoleKeyInfo key)
         {
             const int sencitivity = 1;
-            const int maxVelocity = 15;
-            const int minVelocity = 2;
+            const int maxVelocity = 30;
+            const int minVelocity = 0;
 
             if (key.Key == firstVelocityUpKey && activePlayer == true && firstTowerVelocity < maxVelocity)
             {
@@ -385,17 +685,15 @@ namespace Towers
             builder.Append(secondPlayerName);
             Console.BackgroundColor = ConsoleColor.DarkMagenta;
 
-
             //Write current scores
             string currentResult = string.Format("{0}  {1}:{2}  {3}", firstPlayerName, firstPlayerScore, secondPlayerScore, secondPlayerName);
             builder.Append(' ', (terrainWidth - currentResult.Length) / 2);
             builder.Append(currentResult);
             builder.Append(' ', (terrainWidth - currentResult.Length) / 2 + 1);
 
-
             //Print players live points
-            string firstPlayerLiveString = string.Format("Lives: {0}", firstPlayerLivePoints);
-            string secondPlayerLiveString = string.Format("Lives: {0}", secondPlayerLivePoints);
+            string firstPlayerLiveString = string.Format("Health: {0}", firstPlayerLivePoints);
+            string secondPlayerLiveString = string.Format("Health: {0}", secondPlayerLivePoints);
             builder.Append(firstPlayerLiveString);
             builder.Append(' ', terrainWidth - firstPlayerLiveString.Length - secondPlayerLiveString.Length);
             builder.Append(secondPlayerLiveString);
@@ -414,7 +712,6 @@ namespace Towers
             builder.Append(' ', terrainWidth - firstTowerVelocityString.Length - secondTowerVelocityString.Length);
             builder.Append(secondTowerVelocityString);
             //Draw line
-
             builder.Append('=', terrainWidth);
 
             Console.SetCursorPosition(0, 0);
