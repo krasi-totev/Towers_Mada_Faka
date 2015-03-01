@@ -16,8 +16,8 @@ namespace Towers
         static ConsoleKey firstAngleDownKey = ConsoleKey.S;
         static ConsoleKey firstShootKey = ConsoleKey.Spacebar;
 
-        static ConsoleKey secondVelocityUpKey = ConsoleKey.LeftArrow;
-        static ConsoleKey secondVelocityDownKey = ConsoleKey.RightArrow;
+        static ConsoleKey secondVelocityUpKey = ConsoleKey.RightArrow;
+        static ConsoleKey secondVelocityDownKey = ConsoleKey.LeftArrow;
         static ConsoleKey secondAngleUpKey = ConsoleKey.UpArrow;
         static ConsoleKey secondAngleDownKey = ConsoleKey.DownArrow;
         static ConsoleKey secondShootKey = ConsoleKey.Enter;
